@@ -43,10 +43,10 @@ class Main(agent.Agent):
         file_string = "Target IP Address is :" + self.beliefbase['target_ip_address'] + "\n"
         file_string = file_string + "Host IP Address is :" + self.beliefbase['host_ip_address'] + "\n"
         print("start to information gathering stage...")
-        onto = self.load_ontology()
-        target1 = onto.target.instances()[0]
+        # onto = self.load_ontology()
+        # target1 = onto.target.instances()[0]
         # print(target1.IP_address)
-        target1.IP_address.append(target_ip)
+        # target1.IP_address.append(target_ip)
         # print(target1.IP_address)
         # onto.save()
         print("Probe the target os...")
