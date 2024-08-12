@@ -1,0 +1,5 @@
+open ports are: 
+open ports are: 
+open ports are: 
+open ports are: 
+open ports are: port: 21port: 22port: 23port: 25port: 53port: 80port: 111port: 139port: 445port: 512port: 513port: 514port: 1099port: 1524port: 2049port: 2121port: 3306port: 4444port: 5432port: 5900port: 6000port: 6667port: 8009port: 8180

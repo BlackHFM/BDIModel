@@ -1,0 +1,9 @@
+admin
+root
+msfmain
+user
+toor
+administrator
+admin123
+root123
+test
